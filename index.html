@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>Sistema de Cardápio TDM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        button:disabled { opacity: 0.7; cursor: not-allowed; }
+        /* Cores */
+        .custom-radio:checked { background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='8' cy='8' r='3'/%3e%3c/svg%3e"); border-color: #F97316; background-color: #F97316; }
+        .custom-checkbox:checked { background-image:url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e"); border-color: #F97316; background-color: #F97316; }
+        input:focus, select:focus { --tw-ring-color: #F97316; border-color: #F97316; outline: none; ring: 2px; }
+        .hidden { display: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+    <div id="loading-indicator" class="hidden fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-orange-500"></div>
+    </div>
+
+    <main id="auth-screen" class="flex items-center justify-center min-h-screen">
+        <div class="w-full max-w-md mx-auto p-6">
+            <div id="login-container" class="bg-white rounded-2xl shadow-lg p-8">
+                <h2 class="text-3xl font-bold text-center text-slate-800 mb-6">Login</h2>
+                <form id="login-form" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-800">E-mail</label>
+                        <input id="login-email" name="email" type="email" required class="mt-2 block w-full rounded-md border-0 py-2 px-3 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-800">Senha (CPF)</label>
+                        <input id="login-cpf" name="cpf" type="password" required class="mt-2 block w-full rounded-md border-0 py-2 px-3 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-orange-500">
+                    </div>
+                    <div id="login-message" class="text-sm text-red-600 min-h-[20px]"></div>
+                    <button type="submit" class="w-full py-3 px-4 rounded-md shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600">Entrar</button>
+                </form>
+                <p class="mt-6 text-center text-sm text-gray-500">
+                    Não tem conta? <button id="show-register-btn" class="font-semibold text-orange-500 hover:text-orange-600">Cadastre-se</button>
+                </p>
+            </div>
+
+            <div id="register-container" class="hidden bg-white rounded-2xl shadow-lg p-8">
+                <h2 class="text-3xl font-bold text-center text-slate-800 mb-6">Cadastro</h2>
+                <form id="register-form" class="space-y-4">
+                    <input type="hidden" name="formType" value="cadastro">
+                    <div><label class="block text-sm font-medium">Nome Completo</label><input name="nome" type="text" required class="w-full rounded-md border-gray-300 shadow-sm focus:ring-orange-500"></div>
+                    <div><label class="block text-sm font-medium">E-mail</label><input name="email" type="email" required class="w-full rounded-md border-gray-300 shadow-sm focus:ring-orange-500"></div>
+                    <div><label class="block text-sm font-medium">CPF (Senha)</label><input name="cpf" type="text" required class="w-full rounded-md border-gray-300 shadow-sm focus:ring-orange-500"></div>
+                    <div>
+                        <label class="block text-sm font-medium">Setor</label>
+                        <select name="centroCusto" required class="w-full rounded-md border-gray-300 shadow-sm focus:ring-orange-500">
+                            <option value="">Selecione</option>
+                            <option value="Almoxarifado / EPIs">Almoxarifado / EPIs</option>
+                            <option value="Centro de Competências">Centro de Competências</option>
+                            <option value="Comercial">Comercial</option>
+                            <option value="Compras">Compras</option>
+                            <option value="Compras">Consultoria</option>
+                            <option value="Direção">Direção</option>
+                            <option value="Financeiro">Financeiro</option>
+                            <option value="Gestão">Gestão</option>
+                            <option value="Instrumentação">Instrumentação</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Oficina">Oficina</option>
+                            <option value="Operacional">Operacional</option>
+                            <option value="Qualidade / Meio Ambiente">Qualidade / Meio Ambiente</option>
+                            <option value="RH">RH</option>
+                            <option value="TI">TI</option>
+                            <option value="Zeladoria / Serviços">Zeladoria / Serviços</option>
+                            <option value="Compras">Visitante</option>
+                        </select>
+                    </div>
+                    <div><label class="block text-sm font-medium">C.C. (Centro de Custo)</label><input name="centroCustoFinanceiro" type="text" required class="w-full rounded-md border-gray-300 shadow-sm focus:ring-orange-500"></div>
+                    <div><label class="block text-sm font-medium">Telefone</label><input name="telefone" type="tel" required class="w-full rounded-md border-gray-300 shadow-sm focus:ring-orange-500"></div>
+                    <div id="register-message" class="text-sm min-h-[20px]"></div>
+                    <button type="submit" class="w-full py-3 bg-orange-500 text-white rounded-md hover:bg-orange-600">Cadastrar</button>
+                </form>
+                <p class="mt-6 text-center text-sm text-gray-500">Já tem conta? <button id="show-login-btn" class="font-semibold text-orange-500">Faça login</button></p>
+            </div>
+        </div>
+    </main>
+
+    <main id="admin-screen" class="hidden w-full max-w-4xl mx-auto p-4 md:p-8">
+        <header class="flex flex-wrap justify-between items-center mb-6 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800">Painel do Administrador</h1>
+                <p id="admin-welcome-message" class="text-gray-600"></p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                 <button id="admin-finance-btn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700">Relatório Financeiro</button>
+                 <button id="admin-manage-responses-btn" class="bg-slate-700 text-white font-semibold py-2 px-4 rounded-lg hover:bg-slate-800">Gerenciar Respostas</button>
+                <button id="admin-view-responses-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">Ver Lista</button>
+                <button id="admin-logout-btn" class="text-sm font-semibold text-orange-500 ml-2">Sair</button>
+            </div>
+        </header>
+        <div id="admin-history-container" class="space-y-4 mb-6"></div>
+        <div id="admin-add-btn-container" class="text-center mb-8">
+            <button id="admin-add-menu-btn" class="bg-orange-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-orange-600">Adicionar Cardápio</button>
+        </div>
+        <div id="admin-form-wrapper" class="hidden bg-white rounded-2xl shadow-lg p-8"></div>
+    </main>
+
+    <div id="finance-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-slate-800">Relatório Financeiro (Rateio)</h2>
+                <button onclick="document.getElementById('finance-modal').classList.add('hidden')" class="text-gray-500 text-2xl">&times;</button>
+            </div>
+            <div class="space-y-4">
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Mês</label>
+                        <input type="month" id="fin-month" class="w-full rounded-md border-gray-300 shadow-sm focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Quinzena</label>
+                        <select id="fin-quinzena" class="w-full rounded-md border-gray-300 shadow-sm focus:ring-orange-500">
+                            <option value="1">1ª Quinzena (01-15)</option>
+                            <option value="2">2ª Quinzena (16-Final)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Valor Boleto (R$)</label>
+                        <input type="number" id="fin-total-boleto" step="0.01" class="w-full rounded-md border-gray-300 shadow-sm focus:ring-orange-500" placeholder="0.00">
+                    </div>
+                </div>
+                <button id="generate-finance-report" class="w-full bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 font-semibold">Gerar Relatório</button>
+                
+                <div id="finance-results" class="hidden mt-6">
+                    <h3 class="font-bold text-lg mb-2">Resultados por Centro de Custo</h3>
+                    <div class="mb-2 text-sm text-gray-600">Preço Unitário (Rateio): <span id="fin-calc-unit-price" class="font-bold"></span></div>
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50"><tr><th class="text-left px-2">C.Custo</th><th class="text-right px-2">Qtd</th><th class="text-right px-2">Total (R$)</th></tr></thead>
+                        <tbody id="finance-table-body" class="divide-y divide-gray-200"></tbody>
+                        <tfoot class="bg-gray-100 font-bold"><tr><td class="px-2">TOTAL</td><td class="text-right px-2" id="fin-total-qtd"></td><td class="text-right px-2" id="fin-total-val"></td></tr></tfoot>
+                    </table>
+                    <button id="print-finance-btn" class="mt-4 bg-slate-700 text-white py-2 px-4 rounded hover:bg-slate-800 text-sm">Imprimir Relatório</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main id="admin-responses-screen" class="hidden w-full max-w-5xl mx-auto p-4 md:p-8">
+        <header class="flex flex-wrap justify-between items-center mb-6 gap-4">
+            <h1 class="text-3xl font-bold text-slate-800">Visualização de Respostas</h1>
+            <div>
+                <button id="print-responses-btn" class="bg-slate-700 text-white font-semibold py-2 px-4 rounded-lg hover:bg-slate-800">Imprimir Lista</button>
+                <button id="back-to-admin-btn" class="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 ml-4">Voltar</button>
+            </div>
+        </header>
+        <div class="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap items-center gap-4">
+            <div class="flex items-center gap-2">
+                <label class="text-sm font-medium">Data:</label>
+                <select id="res-date-filter" class="rounded-md border-gray-300 shadow-sm"></select>
+            </div>
+            <div class="flex items-center gap-2">
+                 <label class="text-sm font-medium">Setor:</label>
+                 <select id="res-sector-filter" class="rounded-md border-gray-300 shadow-sm"></select>
+            </div>
+            <div class="flex items-center gap-2">
+                 <label class="text-sm font-medium">Troca:</label>
+                 <select id="res-troca-filter" class="rounded-md border-gray-300 shadow-sm"></select>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="bg-white rounded-lg shadow p-6"><h3 class="text-lg font-medium text-gray-500">Refeições</h3><p id="total-refeicoes" class="text-4xl font-bold text-orange-500 mt-2">0</p></div>
+            <div class="bg-white rounded-lg shadow p-6"><h3 class="text-lg font-medium text-gray-500">Trocas</h3><p id="total-trocas" class="text-4xl font-bold text-orange-500 mt-2">0</p></div>
+            <div class="bg-white rounded-lg shadow p-6"><h3 class="text-lg font-medium text-gray-500">Não Presenciais</h3><p id="total-nao-presenciais" class="text-4xl font-bold text-orange-500 mt-2">0</p></div>
+        </div>
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200" id="responses-table">
+                <thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium uppercase">Nome</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Setor</th><th class="px-6 py-3 text-left text-xs font-medium uppercase">Escolha</th></tr></thead>
+                <tbody id="responses-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <main id="admin-manage-responses-screen" class="hidden w-full max-w-5xl mx-auto p-4 md:p-8">
+          <header class="flex flex-wrap justify-between items-center mb-6 gap-4">
+            <h1 class="text-3xl font-bold text-slate-800">Gerenciar Respostas</h1>
+            <button id="back-to-admin-manage-btn" class="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300">Voltar</button>
+        </header>
+        <div class="bg-white rounded-lg shadow p-6 mb-8 border-l-4 border-orange-500">
+             <h2 class="text-xl font-semibold mb-4">Adicionar / Editar Resposta</h2>
+             <p class="text-sm text-gray-500 mb-4">Selecione o Usuário e a Data. Se já houver resposta, o formulário será preenchido para edição.</p>
+             <form id="add-edit-response-form" class="space-y-4">
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <select id="add-resp-user-type" class="rounded border-gray-300"><option value="existente">Usuário Existente</option><option value="visitante">Visitante</option></select>
+                     <div id="user-selection-container"><select id="add-resp-user" class="w-full rounded border-gray-300"><option value="">Selecione Usuário...</option></select></div>
+                     <div id="visitor-name-container" class="hidden"><input type="text" id="add-resp-visitor-name" placeholder="Nome Visitante" class="w-full rounded border-gray-300"></div>
+                     <input type="text" id="add-resp-cc" placeholder="Centro de Custo" class="rounded border-gray-300">
+                     <input type="date" id="add-resp-date" required class="rounded border-gray-300">
+                 </div>
+                 
+                 <div class="p-4 bg-gray-50 rounded border border-gray-200">
+                     <label class="block font-medium mb-2">Escolha:</label>
+                     <div class="flex gap-4 mb-2">
+                         <label><input type="radio" name="man_presencial" value="sim" checked> Presente</label>
+                         <label><input type="radio" name="man_presencial" value="nao"> Ausente</label>
+                     </div>
+                     <input type="text" id="man_proteina" placeholder="Proteínas (ex: Frango, Carne)" class="w-full rounded border-gray-300 mb-2">
+                     <input type="text" id="man_troca" placeholder="Troca (Opcional)" class="w-full rounded border-gray-300">
+                 </div>
+
+                 <button type="submit" class="bg-orange-500 text-white px-6 py-2 rounded font-bold hover:bg-orange-600">Salvar Alterações</button>
+             </form>
+        </div>
+        <div class="bg-white rounded-lg shadow">
+             <table class="min-w-full"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left">Nome</th><th class="px-6 py-3 text-left">Data</th><th class="px-6 py-3">Status</th></tr></thead><tbody id="manage-responses-table-body"></tbody></table>
+        </div>
+    </main>
+    
+    <main id="user-screen" class="hidden container mx-auto max-w-2xl p-4 md:p-8">
+        <div class="bg-white rounded-2xl shadow-lg p-8 relative">
+            <div class="flex justify-between items-start mb-2">
+                 <div><h1 class="text-2xl font-bold text-slate-800">Cardápio</h1><p id="user-welcome-message" class="text-gray-600"></p></div>
+                 <button id="user-logout-btn" class="text-sm font-semibold text-orange-500 hover:text-orange-600">Sair</button>
+            </div>
+            
+            <div id="user-success-container" class="hidden flex flex-col items-center justify-center py-10 text-center animate-fade-in">
+                <div class="rounded-full bg-green-100 p-4 mb-4">
+                    <svg class="w-16 h-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Respostas Registradas!</h2>
+                <p class="text-gray-600 mb-6">Suas escolhas foram salvas com sucesso.</p>
+                <button onclick="location.reload()" class="bg-orange-500 text-white px-6 py-2 rounded-lg font-bold hover:bg-orange-600 transition shadow">Voltar / Editar</button>
+            </div>
+
+            <form id="user-response-form">
+                <div id="user-menu-container" class="space-y-8"></div>
+                <div class="mt-8 pt-6">
+                    <button type="submit" class="w-full rounded-md bg-orange-500 px-8 py-3 text-white font-bold hover:bg-orange-600">Enviar Respostas</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = 'api.php'; 
+        const loadingIndicator = document.getElementById('loading-indicator');
+        let currentUser = null;
+        let savedMenus = [];
+        let currentUserMenus = [];
+        let allResponsesCache = []; 
+
+        const showLoading = (show) => loadingIndicator.classList.toggle('hidden', !show);
+        const formatToBR = (dateStr) => { if (!dateStr) return "-"; const p = dateStr.split('-'); return `${p[2]}/${p[1]}/${p[0]}`; };
+        
+        const showScreen = (screenName) => {
+            document.querySelectorAll('main').forEach(m => m.classList.add('hidden'));
+            document.getElementById(screenName + '-screen').classList.remove('hidden');
+        };
+
+        document.getElementById('show-register-btn').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('login-container').classList.add('hidden'); document.getElementById('register-container').classList.remove('hidden'); });
+        document.getElementById('show-login-btn').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('register-container').classList.add('hidden'); document.getElementById('login-container').classList.remove('hidden'); });
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault(); showLoading(true);
+            try {
+                const res = await fetch(`${API_URL}?action=login&email=${encodeURIComponent(document.getElementById('login-email').value)}&cpf=${encodeURIComponent(document.getElementById('login-cpf').value)}`);
+                const json = await res.json();
+                if(json.status === 'success'){ currentUser = json.data; sessionStorage.setItem('loggedInUser', JSON.stringify(currentUser)); initApp(); }
+                else { document.getElementById('login-message').textContent = json.message; }
+            } catch(e){ alert('Erro conexão'); } showLoading(false);
+        });
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault(); showLoading(true);
+            try { await fetch(API_URL, {method:'POST', body: new FormData(e.target)}); alert('Cadastrado!'); location.reload(); } catch(e){ alert('Erro'); } showLoading(false);
+        });
+
+        // --- FINANCEIRO ---
+        document.getElementById('admin-finance-btn').addEventListener('click', () => {
+             document.getElementById('finance-modal').classList.remove('hidden');
+             const now = new Date();
+             document.getElementById('fin-month').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+        });
+
+        document.getElementById('generate-finance-report').addEventListener('click', async () => {
+            const m = document.getElementById('fin-month').value;
+            const q = document.getElementById('fin-quinzena').value;
+            const v = document.getElementById('fin-total-boleto').value;
+            if(!m || !v) return alert('Preencha todos os campos');
+            
+            showLoading(true);
+            const res = await fetch(`${API_URL}?action=getRelatorioFinanceiro&month=${m}&quinzena=${q}&totalAmount=${v}`);
+            const json = await res.json();
+            showLoading(false);
+
+            if(json.status === 'success'){
+                const tb = document.getElementById('finance-table-body'); tb.innerHTML = '';
+                json.data.detalhes.forEach(r => {
+                    tb.innerHTML += `<tr><td class="px-2">${r.centro_custo}</td><td class="text-right px-2">${r.qtd}</td><td class="text-right px-2">R$ ${parseFloat(r.total).toFixed(2)}</td></tr>`;
+                });
+                document.getElementById('fin-calc-unit-price').textContent = 'R$ ' + parseFloat(json.data.valor_unitario_calculado).toFixed(2);
+                document.getElementById('fin-total-qtd').textContent = json.data.total_qtd;
+                document.getElementById('fin-total-val').textContent = 'R$ ' + parseFloat(json.data.total_valor).toFixed(2);
+                document.getElementById('finance-results').classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('print-finance-btn').addEventListener('click', () => {
+            const w = window.open('', '', 'width=800,height=600');
+            w.document.write(`<html><head><title>Relatório</title><style>body{font-family:sans-serif} table{width:100%;border-collapse:collapse} th,td{border:1px solid #ccc;padding:5px}</style></head><body><h2>Relatório Financeiro</h2><p>Mês: ${document.getElementById('fin-month').value} | Quinzena: ${document.getElementById('fin-quinzena').value}</p>${document.getElementById('finance-results').innerHTML}</body></html>`);
+            w.document.close(); w.print();
+        });
+
+        document.getElementById('admin-view-responses-btn').addEventListener('click', () => { showScreen('admin-responses'); loadResponsesList(); });
+        
+        async function loadResponsesList() {
+            showLoading(true);
+            const res = await fetch(`${API_URL}?action=getRespostas`);
+            const json = await res.json();
+            allResponsesCache = json.data.respostas;
+            populateFilters(json.data.respostas);
+            renderResponsesTable(json.data.respostas);
+            showLoading(false);
+        }
+
+        function populateFilters(data) {
+            const dates = [...new Set(data.map(r => r.dataRefeicao))].sort().reverse();
+            const selDate = document.getElementById('res-date-filter');
+            selDate.innerHTML = '<option value="">Todas as Datas</option>';
+            dates.forEach(d => selDate.innerHTML += `<option value="${d}">${formatToBR(d)}</option>`);
+
+            const sectors = [...new Set(data.map(r => r.setor).filter(Boolean))].sort();
+            const selSec = document.getElementById('res-sector-filter');
+            selSec.innerHTML = '<option value="">Todos</option>';
+            sectors.forEach(s => selSec.innerHTML += `<option value="${s}">${s}</option>`);
+            
+            const trocas = [...new Set(data.map(r => r.escolhaTroca).filter(Boolean))].sort();
+            const selTroca = document.getElementById('res-troca-filter');
+            selTroca.innerHTML = `
+                <option value="">Todas</option>
+                <option value="__COM_TROCA__">[ Com Troca (Geral) ]</option>
+                <option value="__SEM_TROCA__">[ Sem Troca ]</option>
+            `;
+            trocas.forEach(t => selTroca.innerHTML += `<option value="${t}">${t}</option>`);
+
+            selDate.onchange = applyFilters;
+            selSec.onchange = applyFilters;
+            selTroca.onchange = applyFilters;
+        }
+
+        function applyFilters() {
+            const dVal = document.getElementById('res-date-filter').value;
+            const sVal = document.getElementById('res-sector-filter').value;
+            const tVal = document.getElementById('res-troca-filter').value;
+            
+            const filtered = allResponsesCache.filter(r => {
+                const matchDate = dVal ? r.dataRefeicao === dVal : true;
+                const matchSec = sVal ? r.setor === sVal : true;
+                
+                let matchTroca = true;
+                if(tVal === '__COM_TROCA__') matchTroca = !!r.escolhaTroca;
+                else if(tVal === '__SEM_TROCA__') matchTroca = !r.escolhaTroca;
+                else if(tVal) matchTroca = r.escolhaTroca === tVal;
+
+                return matchDate && matchSec && matchTroca;
+            });
+            renderResponsesTable(filtered);
+        }
+
+        function renderResponsesTable(data) {
+            const tb = document.getElementById('responses-table-body'); tb.innerHTML = '';
+            let tRef=0, tTroc=0, tNao=0;
+            data.forEach(r => {
+                let text = '';
+                if(r.presencial === 'nao') { text = '<span class="text-red-500">Ausente</span>'; tNao++; }
+                else {
+                    tRef++;
+                    let p = [];
+                    if(r.escolhaProteina) p.push(r.escolhaProteina);
+                    if(r.escolhaTroca) { p.push(`<b class="text-orange-600">Troca: ${r.escolhaTroca}</b>`); tTroc++; }
+                    text = p.join(' + ');
+                }
+                const nomeDisplay = r.nomeVisitante ? r.nomeVisitante + ' (Vis)' : (r.nome || r.cpf);
+                
+                tb.innerHTML += `<tr><td class="px-6 py-3 border-b">${nomeDisplay}</td><td class="px-6 py-3 border-b">${r.setor || 'Ext'}</td><td class="px-6 py-3 border-b">${text}</td></tr>`;
+            });
+            document.getElementById('total-refeicoes').textContent = tRef;
+            document.getElementById('total-trocas').textContent = tTroc;
+            document.getElementById('total-nao-presenciais').textContent = tNao;
+        }
+
+        document.getElementById('print-responses-btn').addEventListener('click', () => {
+            const content = document.getElementById('responses-table').outerHTML;
+            const stats = `<div>Total Refeições: ${document.getElementById('total-refeicoes').textContent} | Trocas: ${document.getElementById('total-trocas').textContent}</div>`;
+            const w = window.open('','','width=900,height=700');
+            w.document.write(`<html><head><title>Lista de Almoço</title><style>body{font-family:sans-serif} table{width:100%;border-collapse:collapse;margin-top:20px} th,td{border:1px solid #000;padding:5px;font-size:12px} th{background:#eee}</style></head><body><h1>Relatório de Almoço</h1>${stats}${content}</body></html>`);
+            w.document.close(); setTimeout(()=>w.print(), 500);
+        });
+
+        // --- MANAGE RESPONSES ---
+        document.getElementById('admin-manage-responses-btn').addEventListener('click', async () => {
+            showScreen('admin-manage-responses');
+            showLoading(true);
+            const res = await fetch(`${API_URL}?action=getRespostas`);
+            const json = await res.json();
+            allResponsesCache = json.data.respostas;
+            
+            const selUser = document.getElementById('add-resp-user');
+            selUser.innerHTML = '<option value="">Selecione Usuário...</option>';
+            json.data.usuarios.forEach(u => selUser.innerHTML += `<option value="${u.cpf}">${u.nome}</option>`);
+            
+            const tb = document.getElementById('manage-responses-table-body'); tb.innerHTML = '';
+            allResponsesCache.slice(0, 20).forEach(r => {
+                 const nome = r.nome || r.nomeVisitante || r.cpf;
+                 tb.innerHTML += `<tr><td class="px-6 py-2">${nome}</td><td class="px-6 py-2">${formatToBR(r.dataRefeicao)}</td><td class="px-6 py-2">${r.presencial}</td></tr>`;
+            });
+            showLoading(false);
+        });
+
+        function checkExistingResponse() {
+            const userType = document.getElementById('add-resp-user-type').value;
+            const cpf = (userType === 'existente') ? document.getElementById('add-resp-user').value : 'VISITANTE';
+            const date = document.getElementById('add-resp-date').value;
+
+            if(!cpf || !date) return;
+            const found = allResponsesCache.find(r => r.cpf === cpf && r.dataRefeicao === date);
+            
+            if(found) {
+                document.querySelector('input[name="man_presencial"][value="'+found.presencial+'"]').checked = true;
+                document.getElementById('man_proteina').value = found.escolhaProteina || '';
+                document.getElementById('man_troca').value = found.escolhaTroca || '';
+                if(cpf === 'VISITANTE') {
+                    document.getElementById('add-resp-visitor-name').value = found.nomeVisitante || '';
+                    document.getElementById('add-resp-cc').value = found.centroCustoVisitante || '';
+                }
+            } else {
+                document.querySelector('input[name="man_presencial"][value="sim"]').checked = true;
+                document.getElementById('man_proteina').value = '';
+                document.getElementById('man_troca').value = '';
+            }
+        }
+
+        document.getElementById('add-resp-user').addEventListener('change', checkExistingResponse);
+        document.getElementById('add-resp-date').addEventListener('change', checkExistingResponse);
+
+        document.getElementById('add-edit-response-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userType = document.getElementById('add-resp-user-type').value;
+            const cpf = (userType === 'existente') ? document.getElementById('add-resp-user').value : 'VISITANTE';
+            
+            const data = {
+                formType: 'manageResponse',
+                cpf: cpf,
+                date: document.getElementById('add-resp-date').value,
+                presencial: document.querySelector('input[name="man_presencial"]:checked').value,
+                proteina: document.getElementById('man_proteina').value,
+                troca: document.getElementById('man_troca').value,
+                nomeVisitante: document.getElementById('add-resp-visitor-name').value,
+                centroCustoVisitante: document.getElementById('add-resp-cc').value
+            };
+
+            await fetch(API_URL, {method:'POST', body: objectToFormData(data)});
+            alert('Salvo!');
+            document.getElementById('admin-manage-responses-btn').click(); 
+        });
+
+        // --- ADMIN CARDÁPIOS 
+        document.getElementById('admin-add-menu-btn').addEventListener('click', () => {
+             document.getElementById('admin-add-btn-container').classList.add('hidden');
+             const w = document.getElementById('admin-form-wrapper'); w.classList.remove('hidden');
+             
+             w.innerHTML = `
+            <h3 class="font-bold text-xl mb-4 text-slate-800">Novo Cardápio</h3>
+            <form id="menu-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Data</label>
+                    <input type="date" name="data" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
+                </div>
+                <div>
+                    <input type="text" name="guarnicao" placeholder="Guarnição" required class="block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" name="p1" placeholder="Proteína 1" required class="block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
+                    <input type="text" name="p2" placeholder="Proteína 2" required class="block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
+                </div>
+                <div>
+                    <input type="text" id="trocas" placeholder="Trocas (sep. vírgula)" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
+                    <div class="mt-1 text-right">
+                        <button type="button" onclick="document.getElementById('trocas').value='Omelete Simples, Omelete com Queijo, Omelete Completa, Ovos Fritos'" class="text-sm text-blue-600 hover:text-blue-800 font-medium" style="text-decoration:none;">Add Padrão</button>
+                    </div>
+                </div>
+                <div class="flex gap-3 pt-2">
+                     <button type="submit" class="flex-1 bg-orange-500 text-white py-2 rounded-md font-bold hover:bg-orange-600 shadow">Salvar</button>
+                     <button type="button" onclick="document.getElementById('admin-form-wrapper').classList.add('hidden');document.getElementById('admin-add-btn-container').classList.remove('hidden')" class="px-4 py-2 text-red-600 font-medium hover:bg-red-50 rounded-md">Cancelar</button>
+                </div>
+            </form>`;
+             
+             document.getElementById('menu-form').addEventListener('submit', async (ev) => {
+                 ev.preventDefault();
+                 const f = new FormData(ev.target);
+                 const tStr = document.getElementById('trocas').value;
+                 const m = { data: f.get('data'), guarnicao: f.get('guarnicao'), proteina1: f.get('p1'), proteina2: f.get('p2'), opcoesDeTroca: tStr?tStr.split(','):[], status: 'ativo' };
+                 if(savedMenus.find(x=>x.data===m.data)) return alert('Data já existe');
+                 savedMenus.push(m);
+                 await saveMenusToApi();
+                 alert('Salvo'); renderAdminMenus();
+                 w.classList.add('hidden'); document.getElementById('admin-add-btn-container').classList.remove('hidden');
+             });
+        });
+
+        async function saveMenusToApi() {
+            const fd = new FormData(); fd.append('formType', 'salvarCardapios'); fd.append('cardapios', JSON.stringify(savedMenus));
+            await fetch(API_URL, {method:'POST', body: fd});
+        }
+
+        async function deleteMenuApi(date) {
+            if(!confirm(`Tem certeza que deseja excluir o cardápio do dia ${formatToBR(date)}?`)) return;
+            showLoading(true);
+            const fd = new FormData(); fd.append('date', date);
+            try {
+                const res = await fetch(`${API_URL}?action=deleteMenu`, { method: 'POST', body: fd });
+                const json = await res.json();
+                if(json.status === 'success') {
+                    savedMenus = savedMenus.filter(m => m.data !== date);
+                    renderAdminMenus();
+                    alert('Excluído com sucesso!');
+                } else {
+                    alert('Erro ao excluir: ' + json.message);
+                }
+            } catch(e) { console.error(e); alert('Erro ao excluir'); }
+            showLoading(false);
+        }
+
+        function renderAdminMenus() {
+            const c = document.getElementById('admin-history-container'); c.innerHTML = '';
+            savedMenus.sort((a,b) => new Date(a.data) - new Date(b.data));
+            savedMenus.forEach((m) => {
+                c.innerHTML += `
+                <div class="bg-white p-4 rounded shadow border flex justify-between items-center">
+                    <div>
+                        <b class="text-lg text-slate-800">${formatToBR(m.data)}</b>
+                        <p class="text-gray-600">${m.guarnicao}</p>
+                        <p class="text-xs text-gray-500 mt-1">${m.proteina1} | ${m.proteina2}</p>
+                    </div>
+                    <button onclick="deleteMenuApi('${m.data}')" class="bg-red-100 text-red-600 p-2 rounded hover:bg-red-200 transition">Excluir</button>
+                </div>`;
+            });
+        }
+
+        // --- USER ---
+        const userModule = {
+            init: async () => {
+                document.getElementById('user-welcome-message').textContent = `Olá, ${currentUser.nome}`;
+                document.getElementById('user-logout-btn').onclick = handleLogout;
+                const r = await fetch(`${API_URL}?action=getCardapio&view=user`); const j = await r.json();
+                currentUserMenus = j.data;
+                const c = document.getElementById('user-menu-container'); c.innerHTML = '';
+                if(!currentUserMenus.length) c.innerHTML = '<p>Sem cardápio.</p>';
+                
+                currentUserMenus.forEach((m,i) => {
+                    const tHtml = (m.opcoesDeTroca||[]).map(t=>`<label class="block"><input type="radio" name="tr-${i}" value="${t}" onclick="resetP(${i})"> ${t}</label>`).join('');
+                    c.innerHTML += `
+                    <div class="bg-white p-4 rounded shadow mb-4 border-l-4 border-orange-500">
+                        <h3 class="text-lg font-bold text-slate-800">${formatToBR(m.data)}</h3>
+                        <p class="text-gray-600 mb-4 text-sm">${m.guarnicao}</p>
+                        <p class="font-bold text-sm text-slate-800 mb-2">Você estará no presencial?</p>
+                        <div class="flex gap-6 mb-3">
+                            <label class="font-medium cursor-pointer flex items-center gap-2">
+                                <input type="radio" name="pre-${i}" value="sim" class="w-4 h-4 text-orange-600" onclick="document.getElementById('opt-${i}').classList.remove('hidden')"> Sim
+                            </label> 
+                            <label class="font-medium cursor-pointer flex items-center gap-2">
+                                <input type="radio" name="pre-${i}" value="nao" class="w-4 h-4 text-orange-600" onclick="document.getElementById('opt-${i}').classList.add('hidden'); clearSelection(${i})"> Não
+                            </label>
+                        </div>
+                        <div id="opt-${i}" class="hidden bg-gray-50 p-3 rounded border border-gray-200">
+                            <p class="text-xs font-bold text-gray-500 uppercase mb-2">Selecione o prato:</p>
+                            <label class="block mb-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
+                                <input type="checkbox" name="p1-${i}" class="pp-${i} rounded text-orange-600" onchange="chkP(${i},this)"> ${m.proteina1}
+                            </label>
+                            <label class="block mb-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
+                                <input type="checkbox" name="p2-${i}" class="pp-${i} rounded text-orange-600" onchange="chkP(${i},this)"> ${m.proteina2}
+                            </label>
+                            ${tHtml ? `
+                            <div class="mt-3 border-t pt-2">
+                                <label class="font-bold text-sm text-orange-600 flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" id="want-tr-${i}" onchange="tglTr(${i})" class="rounded text-orange-600"> Quero Trocar
+                                </label>
+                                <div id="tr-box-${i}" class="hidden pl-4 mt-2 space-y-1 text-sm text-gray-700">${tHtml}</div>
+                            </div>` : ''}
+                        </div>
+                    </div>`;
+                });
+            }
+        };
+        
+        // Helpers User UX
+        window.tglTr = (i) => { const on = document.getElementById(`want-tr-${i}`).checked; document.getElementById(`tr-box-${i}`).classList.toggle('hidden', !on); if(on) document.querySelectorAll(`.pp-${i}`).forEach(c=>c.checked=false); else document.querySelectorAll(`input[name="tr-${i}"]`).forEach(r=>r.checked=false); };
+        window.chkP = (i, el) => { if(document.getElementById(`want-tr-${i}`)?.checked && el.checked) document.querySelectorAll(`.pp-${i}`).forEach(c => { if(c!==el) c.checked=false; }); };
+        window.resetP = (i) => { document.querySelectorAll(`.pp-${i}`).forEach(c=>c.checked=false); };
+        window.clearSelection = (i) => {
+            document.querySelectorAll(`.pp-${i}`).forEach(c => c.checked = false); 
+            const tr = document.getElementById(`want-tr-${i}`);
+            if(tr) { 
+                tr.checked = false; document.getElementById(`tr-box-${i}`).classList.add('hidden');
+                document.querySelectorAll(`input[name="tr-${i}"]`).forEach(r => r.checked = false); 
+            }
+        };
+
+        document.getElementById('user-response-form').addEventListener('submit', async (e) => {
+            e.preventDefault(); const resps = [];
+            for(let i=0; i<currentUserMenus.length; i++) {
+                const m = currentUserMenus[i];
+                const pre = document.querySelector(`input[name="pre-${i}"]:checked`)?.value;
+                if(!pre) return alert(`Responda se vai estar presente no dia ${formatToBR(m.data)}.`);
+                let p = [], t = null;
+                if(pre==='sim'){
+                    if(document.querySelector(`input[name="p1-${i}"]`).checked) p.push(m.proteina1);
+                    if(document.querySelector(`input[name="p2-${i}"]`).checked) p.push(m.proteina2);
+                    if(document.getElementById(`want-tr-${i}`)?.checked) t = document.querySelector(`input[name="tr-${i}"]:checked`)?.value;
+                    if(p.length===2 && t) return alert(`Dia ${formatToBR(m.data)}: Max 1 proteína com troca.`);
+                    if(!p.length && !t) return alert(`Dia ${formatToBR(m.data)}: Você marcou SIM, mas não escolheu a comida.`);
+                }
+                resps.push({date:m.data, userCpf:currentUser.cpf, presencial:pre, proteina:p.join(', '), troca:t});
+            }
+            if(resps.length) { 
+                showLoading(true);
+                try {
+                    await fetch(API_URL,{method:'POST', body: objectToFormData({formType:'salvarRespostas', respostas:JSON.stringify(resps)})}); 
+                    showLoading(false);
+                    // Feedback Visual
+                    document.getElementById('user-response-form').classList.add('hidden');
+                    document.getElementById('user-success-container').classList.remove('hidden');
+                    document.getElementById('user-welcome-message').classList.add('hidden');
+                } catch(e) {
+                    showLoading(false);
+                    alert('Erro ao enviar. Tente novamente.');
+                }
+            }
+        });
+
+        // Utils
+        function objectToFormData(obj) { const fd = new FormData(); for(const k in obj) fd.append(k, obj[k]); return fd; }
+        function handleLogout() { sessionStorage.removeItem('loggedInUser'); location.reload(); }
+        
+        function initApp() {
+            const u = JSON.parse(sessionStorage.getItem('loggedInUser'));
+            if(!u) return showScreen('auth');
+            currentUser = u;
+            if(u.role === 'admin') { 
+                showScreen('admin'); 
+                document.getElementById('admin-welcome-message').textContent = u.nome; 
+                document.getElementById('admin-logout-btn').addEventListener('click', handleLogout);
+                
+                fetch(`${API_URL}?action=getCardapio`).then(r=>r.json()).then(j=>{ savedMenus=j.data; renderAdminMenus(); });
+                document.getElementById('back-to-admin-btn').onclick = () => showScreen('admin');
+                document.getElementById('back-to-admin-manage-btn').onclick = () => showScreen('admin');
+            } else { showScreen('user'); userModule.init(); }
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
